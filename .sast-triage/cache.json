@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "entries": {
+    "synthetic:1325f17516c8abe6eb3226ac6bdd0cbb14c72be4d7342eae9087323296a62480": {
+      "ruleId": "js/incomplete-multi-character-sanitization",
+      "file": "server/model/status_page.js",
+      "verdict": "uncertain",
+      "reason": "token budget exhausted (97119 of 120000 tokens used; the next call would exceed the budget)",
+      "evidence": null,
+      "codeHash": "sha256:167921ecb2d5d916e95717574272fdaade4f8765dd928f781bf4e0b140e0f82d",
+      "model": "deepseek-v4-pro",
+      "decidedAt": "2026-07-22T21:28:27Z",
+      "tokensUsed": 97119
+    },
+    "synthetic:23bc8e664be1083752cbfe9db345716dbf85c5463b84ef9ae4488d0594332347": {
+      "ruleId": "js/disabling-certificate-validation",
+      "file": "extra/healthcheck.js",
+      "verdict": "benign",
+      "reason": "The script sets NODE_TLS_REJECT_UNAUTHORIZED=0 unconditionally, but the only HTTPS request it makes targets 127.0.0.1 (localhost) by default — a loopback connection within the same container. Certificate validation for a self-signed localhost cert is unnecessary, and traffic never leaves the host. The script is also deprecated (replaced by healthcheck.go) and is a one-shot healthcheck utility that exits after a single request, never accepting external input. There is no attacker-controlled path to exploit the disabled validation.",
+      "evidence": [
+        "extra/healthcheck.js:11",
+        "extra/healthcheck.js:15-22",
+        "extra/healthcheck.js:36",
+        "extra/healthcheck.js:41-48",
+        "extra/healthcheck.js:1-6"
+      ],
+      "codeHash": "sha256:6b76411e5fad643fc6901f734fe78d560ba893d5c436068b24123f2811010629",
+      "model": "deepseek-v4-pro",
+      "decidedAt": "2026-07-22T21:26:46Z",
+      "tokensUsed": 18991
+    },
+    "synthetic:97f49a2ebe9d11bb0379cfa1404f8eebfdbd22de5950e6d11bc9ece5e753f829": {
+      "ruleId": "js/missing-rate-limiting",
+      "file": "server/setup-database.js",
+      "verdict": "uncertain",
+      "reason": "token budget exhausted (95914 of 120000 tokens used; the next call would exceed the budget)",
+      "evidence": null,
+      "codeHash": "sha256:00a44177238d9f2d819f7becf45b48db3548855720dcbcc16f2e3ff38d0655c4",
+      "model": "deepseek-v4-pro",
+      "decidedAt": "2026-07-22T21:26:54Z",
+      "tokensUsed": 95914
+    },
+    "synthetic:d380df956d20339294265b20974daad1b59fd220528514b84bef9295aa02f692": {
+      "ruleId": "js/weak-cryptographic-algorithm",
+      "file": "server/modules/axios-ntlm/lib/hash.js",
+      "verdict": "uncertain",
+      "reason": "token budget exhausted (113460 of 120000 tokens used; the next call would exceed the budget)",
+      "evidence": null,
+      "codeHash": "sha256:07faa25da2c45b6c4acbab5903732c0de4f83cd7c99f6623edc1daed76b6a007",
+      "model": "deepseek-v4-pro",
+      "decidedAt": "2026-07-22T21:26:55Z",
+      "tokensUsed": 113460
+    },
+    "synthetic:e436763b76d8cff5c9861d5c60f1f32b46b60c5e2cd583c62ff5800cd5829a21": {
+      "ruleId": "js/insufficient-password-hash",
+      "file": "server/util-server.js",
+      "verdict": "uncertain",
+      "reason": "token budget exhausted (106866 of 120000 tokens used; the next call would exceed the budget)",
+      "evidence": null,
+      "codeHash": "sha256:788d28cbd0566b6f424a3f986fe30859a7bfe14938b5113e3f69193570ca5397",
+      "model": "deepseek-v4-pro",
+      "decidedAt": "2026-07-22T21:27:45Z",
+      "tokensUsed": 106866
+    },
+    "synthetic:eaf07af5225fbbe6de3de162faeac793a8a3e95beb1fc30e18e51c0c36cc4571": {
+      "ruleId": "js/insufficient-password-hash",
+      "file": "server/modules/axios-ntlm/lib/hash.js",
+      "verdict": "benign",
+      "reason": "The flagged code implements the NTLM authentication protocol, which mandates MD4 (createNTLMHash) and DES (createLMHash) for computing challenge-response hashes. This is not a password storage function — passwords are used transiently to construct NTLM authentication messages sent to servers that require NTLM. The library has no choice of algorithm; these are protocol-specified primitives required for interoperability with NTLM servers. The password is never persisted by this code, and the hash output is sent over the wire as part of the NTLM handshake, not stored.",
+      "evidence": [
+        "server/modules/axios-ntlm/lib/hash.js:54-58",
+        "server/modules/axios-ntlm/lib/hash.js:13-24",
+        "server/modules/axios-ntlm/lib/ntlm.js:169",
+        "server/modules/axios-ntlm/lib/ntlm.js:186-187",
+        "server/modules/axios-ntlm/lib/ntlmClient.js:234-240",
+        "server/util-server.js:312-323"
+      ],
+      "codeHash": "sha256:b8af49c6ce138de3ef3599270a00ced59ba9493b3b6f056fc968c8b9a77e5d71",
+      "model": "deepseek-v4-pro",
+      "decidedAt": "2026-07-22T21:27:29Z",
+      "tokensUsed": 79142
+    },
+    "synthetic:f473ce05016d06d2552cde83e29b7ca878b8b606b5307ccfba6c200debd178a4": {
+      "ruleId": "js/disabling-certificate-validation",
+      "file": "server/notification-providers/teltonika.js",
+      "verdict": "benign",
+      "reason": "The rejectUnauthorized: false on line 51 is gated by notification.teltonikaUnsafeTls, a boolean set by the authenticated admin via a UI checkbox (Teltonika.vue:23). It is stored server-side (server/notification.js:272) and is not attacker-controlled. The code documents the legitimate use case (self-signed certs on Teltonika routers, lines 46-48) and the UI warns about MITM risks (teltonikaUnsafeTlsDescription). This is an intentional, documented, admin-controlled configuration — not an exploitable vulnerability.",
+      "evidence": [
+        "server/notification-providers/teltonika.js:46-53",
+        "server/notification-providers/teltonika.js:22-27",
+        "src/components/notifications/Teltonika.vue:21-26",
+        "server/notification.js:270-274"
+      ],
+      "codeHash": "sha256:edffb4c453523ba6516d70f306a5226cd0683323d53c7095684d99274a4a5b82",
+      "model": "deepseek-v4-pro",
+      "decidedAt": "2026-07-22T21:27:26Z",
+      "tokensUsed": 63835
+    }
+  }
+}
