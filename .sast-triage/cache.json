@@ -1,0 +1,111 @@
+{
+  "version": 1,
+  "entries": {
+    "synthetic:1325f17516c8abe6eb3226ac6bdd0cbb14c72be4d7342eae9087323296a62480": {
+      "ruleId": "js/incomplete-multi-character-sanitization",
+      "file": "server/model/status_page.js",
+      "verdict": "benign",
+      "reason": "The regex /\u003c[^\u003e]+\u003e/g on line 164 is indeed bypassable (e.g., \u003c\u003cscript\u003escript\u003e survives as \u003cscript\u003e), but the resulting description155 is only consumed via cheerio's .attr('content', description155) on lines 169 and 188. Cheerio's HTML serializer ($.root().html() on line 211) properly escapes attribute values, so any residual \u003cscript\u003e text is rendered as \u0026lt;script\u0026gt; in the final HTML — inert in attribute context. No HTML element injection is possible.",
+      "evidence": [
+        "server/model/status_page.js:163-166",
+        "server/model/status_page.js:169",
+        "server/model/status_page.js:188",
+        "server/model/status_page.js:211"
+      ],
+      "codeHash": "sha256:652f3eb28571490c65a8dadfdcae234517027558125ef64729d17caabdf3826e",
+      "model": "deepseek-v4-pro",
+      "decidedAt": "2026-07-22T20:55:50Z",
+      "tokensUsed": 74185
+    },
+    "synthetic:23bc8e664be1083752cbfe9db345716dbf85c5463b84ef9ae4488d0594332347": {
+      "ruleId": "js/disabling-certificate-validation",
+      "file": "extra/healthcheck.js",
+      "verdict": "benign",
+      "reason": "The flagged file extra/healthcheck.js is explicitly deprecated (see line 6: 'Changed to healthcheck.go, it will be deleted in the future'). The production Docker HEALTHCHECK uses the compiled Go binary extra/healthcheck (docker/dockerfile:40, docker/dockerfile:89), built from extra/healthcheck.go via build-healthcheck.js — not the deprecated JS script. The JS file is never executed in any build or runtime path; it is dead code retained only due to a historical Portainer issue (lines 2-3). The NODE_TLS_REJECT_UNAUTHORIZED=0 setting is therefore unreachable in production.",
+      "evidence": [
+        "extra/healthcheck.js:2-7",
+        "extra/healthcheck.js:11",
+        "docker/dockerfile:23",
+        "docker/dockerfile:40",
+        "docker/builder-go.dockerfile:21",
+        "extra/build-healthcheck.js:27"
+      ],
+      "codeHash": "sha256:2bfe50d3c0abe8d272a2abd33041990866759173982eb22fb840a99fa34e4f0f",
+      "model": "deepseek-v4-pro",
+      "decidedAt": "2026-07-22T20:55:25Z",
+      "tokensUsed": 50290
+    },
+    "synthetic:97f49a2ebe9d11bb0379cfa1404f8eebfdbd22de5950e6d11bc9ece5e753f829": {
+      "ruleId": "js/missing-rate-limiting",
+      "file": "server/setup-database.js",
+      "verdict": "benign",
+      "reason": "The flagged POST /setup-database route (lines 170-293) is part of a one-time bootstrap server that only runs when no database is configured (server/server.js:235-238). It is ephemeral: on successful setup, the server permanently shuts itself down (lines 285-292, calling tempServer.close() and resolve()), after which the main application takes over and this route no longer exists. The runningSetup flag (lines 173-178) enforces sequential mutual exclusion—only one setup attempt executes at a time. The database access is a connectivity smoke test (SELECT 1 at line 264), not a data operation that could leak or corrupt application data. Because the setup server is transient by design and self-terminates after one successful invocation, the absence of rate limiting does not create a practically exploitable condition in this codebase.",
+      "evidence": [
+        "server/setup-database.js:170-178",
+        "server/setup-database.js:245-270",
+        "server/setup-database.js:285-292",
+        "server/server.js:235-238"
+      ],
+      "codeHash": "sha256:2e81b757fc4e73bb6862abe18920829273e22c86261fc39e7222760fd3df0faa",
+      "model": "deepseek-v4-pro",
+      "decidedAt": "2026-07-22T20:55:47Z",
+      "tokensUsed": 53971
+    },
+    "synthetic:d380df956d20339294265b20974daad1b59fd220528514b84bef9295aa02f692": {
+      "ruleId": "js/weak-cryptographic-algorithm",
+      "file": "server/modules/axios-ntlm/lib/hash.js",
+      "verdict": "benign",
+      "reason": "The username is not sensitive data in this context: it is transmitted in cleartext in the NTLM Type 3 message (ntlm.js:208-212, buf.write(username,...)). The HMAC-MD5 construction (hash.js:60-62) is mandated by the NTLMv2 protocol specification; the HMAC key is the NTLM password hash, not the username. HMAC-MD5 does not rely on MD5's broken collision-resistance properties and remains secure for this protocol-defined use. The data flow is username → toUpperCase() → HMAC-MD5 update, but the username is non-secret and the algorithm choice is protocol-required, not a developer error.",
+      "evidence": [
+        "server/modules/axios-ntlm/lib/hash.js:59-62",
+        "server/modules/axios-ntlm/lib/ntlm.js:208-212",
+        "server/modules/axios-ntlm/lib/ntlm.js:169-172",
+        "server/modules/axios-ntlm/lib/ntlmClient.js:234-240"
+      ],
+      "codeHash": "sha256:fa507f6af725a56f32f3fa19a1c7a34438855065f153552b44843f91abf724ad",
+      "model": "deepseek-v4-pro",
+      "decidedAt": "2026-07-22T20:55:39Z",
+      "tokensUsed": 74746
+    },
+    "synthetic:e436763b76d8cff5c9861d5c60f1f32b46b60c5e2cd583c62ff5800cd5829a21": {
+      "ruleId": "js/insufficient-password-hash",
+      "file": "server/util-server.js",
+      "verdict": "benign",
+      "reason": "The value stored in user.password is always a bcrypt hash produced by passwordHash.generate() (server/password-hash.js:10-12), never a plaintext password. At server/model/user.js:45, shake256() hashes this already-bcrypt-hashed value for JWT invalidation checks (server/server.js:415), not for password storage or verification. Since the input to shake256 is already a strong bcrypt hash, the use of a fast SHAKE256 hash does not constitute insufficient password hashing — no plaintext password reaches the flagged sink.",
+      "evidence": [
+        "server/password-hash.js:10-12",
+        "server/server.js:719",
+        "server/model/user.js:28-32",
+        "server/model/user.js:45",
+        "server/util-server.js:839-843",
+        "server/server.js:415"
+      ],
+      "codeHash": "sha256:447a44a1659ee3904e90b4a8abb54610475cd94a1feccbfe22b9d79fab19e323",
+      "model": "deepseek-v4-pro",
+      "decidedAt": "2026-07-22T20:56:21Z",
+      "tokensUsed": 115737
+    },
+    "synthetic:eaf07af5225fbbe6de3de162faeac793a8a3e95beb1fc30e18e51c0c36cc4571": {
+      "ruleId": "js/insufficient-password-hash",
+      "file": "server/modules/axios-ntlm/lib/hash.js",
+      "verdict": "uncertain",
+      "reason": "token budget exhausted (112566 of 120000 tokens used; the next call would exceed the budget)",
+      "evidence": null,
+      "codeHash": "sha256:c8a55254de16dd8106d47da9ecdf769a444547c01954b76bc77a54f16602382b",
+      "model": "deepseek-v4-pro",
+      "decidedAt": "2026-07-22T20:56:26Z",
+      "tokensUsed": 112566
+    },
+    "synthetic:f473ce05016d06d2552cde83e29b7ca878b8b606b5307ccfba6c200debd178a4": {
+      "ruleId": "js/disabling-certificate-validation",
+      "file": "server/notification-providers/teltonika.js",
+      "verdict": "uncertain",
+      "reason": "token budget exhausted (103318 of 120000 tokens used; the next call would exceed the budget)",
+      "evidence": null,
+      "codeHash": "sha256:e17a0a81ac96f7cf73014eeda1cd231f53bfdd6c0d562318f7403bab82779964",
+      "model": "deepseek-v4-pro",
+      "decidedAt": "2026-07-22T20:56:32Z",
+      "tokensUsed": 103318
+    }
+  }
+}
