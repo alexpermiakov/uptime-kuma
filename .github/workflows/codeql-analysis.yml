@@ -11,7 +11,8 @@ jobs:
 
     permissions:
       actions: read
-      contents: read
+      contents: write
+      pull-requests: write
       security-events: write
 
     strategy:
@@ -21,7 +22,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-        with: { persist-credentials: false }
+        with: { persist-credentials: true }
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
@@ -50,7 +51,7 @@ jobs:
             exit 1
           fi
 
-          echo "sarif_path=$SARIF_FILE" >> $GITHUB_OUTPUT
+          echo "sarif_path=$SARIF_FILE" >> "$GITHUB_OUTPUT"
           echo "Resolved SARIF path: $SARIF_FILE"
 
       - name: Triage
@@ -61,8 +62,7 @@ jobs:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           base-url: https://api.deepseek.com
           max-findings-budget: 100
-          # Update the filename to match CodeQL's language-based naming convention
-          sarif-file: ${{ runner.temp }}/codeql-results/${{ matrix.language }}.sarif
+          sarif-file: ${{ steps.sarif-resolver.outputs.sarif_path }}
           scope: full
           mode: baseline
           cache-write: pr
