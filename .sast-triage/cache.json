@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "entries": {
+    "synthetic:c74fa4e19770e9bc21976783ef6360f8873c65580518d8b8d714d7d6f1acb944": {
+      "ruleId": "go/disabled-certificate-check",
+      "file": "extra/healthcheck.go",
+      "verdict": "benign",
+      "reason": "The healthcheck binary connects exclusively to localhost (127.0.0.1:3001 by default) inside the Docker container as a HEALTHCHECK command. InsecureSkipVerify only takes effect when both SSL key and cert env vars are set (triggering HTTPS); otherwise plain HTTP is used. The healthcheck sends no sensitive data — it performs an unauthenticated GET, discards the body, and logs only the status code. Since the connection target is localhost, there is no network segment for a MITM attacker to occupy without already having compromised the container. The setting mirrors the legacy Node.js healthcheck behavior (line 25 comment) and is needed for self-signed certificates that would otherwise break the healthcheck when HTTPS is enabled.",
+      "evidence": [
+        "extra/healthcheck.go:25-28",
+        "extra/healthcheck.go:44-50",
+        "extra/healthcheck.go:60-61",
+        "extra/healthcheck.go:64-69",
+        "extra/healthcheck.go:71-74",
+        "extra/healthcheck.go:80-88",
+        "docker/dockerfile:40"
+      ],
+      "codeHash": "sha256:4102b42a2a163a5e05ea94ee051e0128675714fd16e10074494a6f0fde7615f4",
+      "model": "deepseek-v4-pro",
+      "decidedAt": "2026-07-22T21:26:08Z",
+      "tokensUsed": 18702
+    }
+  }
+}
