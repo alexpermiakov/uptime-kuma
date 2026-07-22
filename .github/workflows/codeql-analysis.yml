@@ -62,7 +62,7 @@ jobs:
           base-url: https://api.deepseek.com
           max-findings-budget: 100
           # Update the filename to match CodeQL's language-based naming convention
-          sarif-file: ${{ runner.temp }}/codeql-sarif/${{ matrix.language }}.sarif
+          sarif-file: ${{ runner.temp }}/codeql-results/${{ matrix.language }}.sarif
           scope: full
           mode: baseline
           cache-write: pr
