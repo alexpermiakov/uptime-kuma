@@ -38,7 +38,20 @@ jobs:
         with:
           category: "/language:${{matrix.language}}"
           output: ${{ runner.temp }}/codeql-results
-          post-processed-sarif-path: ${{ runner.temp }}/codeql-sarif
+
+      - name: Resolve SARIF File Path
+        id: sarif-resolver
+        run: |
+          # Locate the SARIF file produced by CodeQL
+          SARIF_FILE=$(find ${{ runner.temp }}/codeql-results -type f -name "*.sarif" | head -n 1)
+
+          if [ -z "$SARIF_FILE" ]; then
+            echo "::error::No SARIF file was produced in ${{ runner.temp }}/codeql-results"
+            exit 1
+          fi
+
+          echo "sarif_path=$SARIF_FILE" >> $GITHUB_OUTPUT
+          echo "Resolved SARIF path: $SARIF_FILE"
 
       - name: Triage
         uses: alexpermiakov/sast-triage@v1
