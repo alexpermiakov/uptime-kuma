@@ -63,6 +63,7 @@ jobs:
           base-url: https://api.deepseek.com
           max-findings-budget: 100
           sarif-file: ${{ steps.sarif-resolver.outputs.sarif_path }}
+          effort: large
           scope: full
           mode: baseline
           cache-write: pr
