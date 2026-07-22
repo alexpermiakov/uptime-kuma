@@ -48,7 +48,8 @@ jobs:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           base-url: https://api.deepseek.com
           max-findings-budget: 100
-          sarif-file: ${{ runner.temp }}/codeql-sarif/results.sarif
+          # Update the filename to match CodeQL's language-based naming convention
+          sarif-file: ${{ runner.temp }}/codeql-sarif/${{ matrix.language }}.sarif
           scope: full
           mode: baseline
           cache-write: pr
