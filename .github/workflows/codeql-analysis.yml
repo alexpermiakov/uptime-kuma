@@ -37,18 +37,18 @@ jobs:
         with:
           category: "/language:${{matrix.language}}"
 
-      # - name: Triage
-      #   uses: alexpermiakov/sast-triage@v1
-      #   with:
-      #     provider: openai
-      #     model: deepseek-v4-pro
-      #     openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-      #     base-url: https://api.deepseek.com
-      #     max-findings-budget: 100
-      #     sarif-file: findings.sarif
-      #     scope: full
-      #     mode: baseline
-      #     cache-write: pr
+      - name: Triage
+        uses: alexpermiakov/sast-triage@v1
+        with:
+          provider: openai
+          model: deepseek-v4-pro
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          base-url: https://api.deepseek.com
+          max-findings-budget: 100
+          sarif-file: ${{ steps.codeql.outputs.sarif-output }}/results.sarif
+          scope: full
+          mode: baseline
+          cache-write: pr
   zizmor:
     runs-on: ubuntu-latest
     permissions:
