@@ -1,0 +1,123 @@
+{
+  "version": 1,
+  "entries": {
+    "synthetic:1325f17516c8abe6eb3226ac6bdd0cbb14c72be4d7342eae9087323296a62480": {
+      "ruleId": "js/incomplete-multi-character-sanitization",
+      "file": "server/model/status_page.js",
+      "verdict": "benign",
+      "reason": "The regex strips complete HTML tags but could leave partial fragments like \u003cscript without \u003e. However, description155 is only used as a value in cheerio .attr() calls for meta tag content attributes (lines 169, 188). When cheerio serializes the DOM back to HTML via $.root().html() (line 211), attribute values are properly HTML-escaped — \u003c becomes \u0026lt;, making any surviving fragment inert inside the attribute context. The regex is a content-extraction step, not the security boundary.",
+      "evidence": [
+        "server/model/status_page.js:163-166",
+        "server/model/status_page.js:168-169",
+        "server/model/status_page.js:188-189",
+        "server/model/status_page.js:211"
+      ],
+      "codeHash": "sha256:8d8f77549a0ac4c23fbb768bc9b714859d7e53c5496937af58dabe82806ba7c0",
+      "model": "deepseek-v4-pro",
+      "decidedAt": "2026-07-23T09:18:45Z",
+      "tokensUsed": 81803
+    },
+    "synthetic:23bc8e664be1083752cbfe9db345716dbf85c5463b84ef9ae4488d0594332347": {
+      "ruleId": "js/disabling-certificate-validation",
+      "file": "extra/healthcheck.js",
+      "verdict": "benign",
+      "reason": "The healthcheck script runs as a Docker HEALTHCHECK command inside the container, connecting only to localhost (127.0.0.1) by default. No attacker-controlled input reaches the TLS configuration: the target host is hardcoded to 127.0.0.1 unless overridden by deployment-time environment variables (UPTIME_KUMA_HOST or HOST), which are not attacker-modifiable. The script only performs a simple GET request with no sensitive data transmitted. TLS verification is intentionally disabled to accommodate self-signed certificates commonly used in internal/local deployments.",
+      "evidence": [
+        "extra/healthcheck.js:11",
+        "extra/healthcheck.js:15-22",
+        "extra/healthcheck.js:35-36",
+        "docker/dockerfile:40"
+      ],
+      "codeHash": "sha256:d875aaba40ba99f5681fe023a9b66c0ceaa653349c301d0176d17c45e9fc7ae5",
+      "model": "deepseek-v4-pro",
+      "decidedAt": "2026-07-23T09:17:45Z",
+      "tokensUsed": 26321
+    },
+    "synthetic:97f49a2ebe9d11bb0379cfa1404f8eebfdbd22de5950e6d11bc9ece5e753f829": {
+      "ruleId": "js/missing-rate-limiting",
+      "file": "server/setup-database.js",
+      "verdict": "benign",
+      "reason": "The POST /setup-database route exists only on a temporary Express server that runs exclusively during first-time application setup (when no database is configured). The temporary server shuts down permanently after a single successful setup (lines 285-292). The runningSetup flag (lines 173-176) enforces at-most-one concurrent execution, providing inherent serialization. This is not a persistent production endpoint: it is unreachable on the main server, and the route's containing server is only created and started when setupDatabase.isNeedSetup() returns true (server/server.js:236-238), then destroyed after one success. Rate-limiting a one-shot, self-destructing setup endpoint is unnecessary.",
+      "evidence": [
+        "server/setup-database.js:170-293",
+        "server/setup-database.js:173-176",
+        "server/setup-database.js:285-292",
+        "server/setup-database.js:136-137",
+        "server/server.js:235-239"
+      ],
+      "codeHash": "sha256:e95faa33beb3de82bf8e16798baa7a08685bf0627c120531295da35336283e27",
+      "model": "deepseek-v4-pro",
+      "decidedAt": "2026-07-23T09:17:29Z",
+      "tokensUsed": 53585
+    },
+    "synthetic:d380df956d20339294265b20974daad1b59fd220528514b84bef9295aa02f692": {
+      "ruleId": "js/weak-cryptographic-algorithm",
+      "file": "server/modules/axios-ntlm/lib/hash.js",
+      "verdict": "benign",
+      "reason": "This is an NTLM protocol implementation library. The MD5-based HMAC at line 60-61 is mandated by the NTLMv2 protocol specification (Microsoft MS-NLMP). The library has no alternative — replacing MD5 would break protocol interoperability. The username is not a cryptographic secret; it is HMAC message data, while the actual key is the ntlmhash derived from the password. The weak cryptography is a property of the NTLM protocol itself, not a code defect in this implementation.",
+      "evidence": [
+        "server/modules/axios-ntlm/lib/hash.js:54-62",
+        "server/modules/axios-ntlm/lib/hash.js:64-66",
+        "server/modules/axios-ntlm/lib/hash.js:78-80",
+        "server/modules/axios-ntlm/lib/ntlm.js:167-172",
+        "server/modules/axios-ntlm/lib/ntlmClient.js:234-239"
+      ],
+      "codeHash": "sha256:decb745bf4c3de25a1d76baa4e90110942ec3aded781293aa8151783de629236",
+      "model": "deepseek-v4-pro",
+      "decidedAt": "2026-07-23T09:17:49Z",
+      "tokensUsed": 46924
+    },
+    "synthetic:e436763b76d8cff5c9861d5c60f1f32b46b60c5e2cd583c62ff5800cd5829a21": {
+      "ruleId": "js/insufficient-password-hash",
+      "file": "server/util-server.js",
+      "verdict": "benign",
+      "reason": "shake256 is not used as a password hashing function. At the point shake256(user.password) is called in User.createJWT (user.js:45), user.password already contains a bcrypt hash — users are loaded from the database via R.findOne (auth.js:20) where the stored value is a bcrypt hash generated by passwordHash.generate (password-hash.js:10-11 using bcrypt.hash with 10 salt rounds). shake256 is applied to the already-bcrypt-hashed value solely to produce a short fingerprint (16 bytes) embedded in JWTs as the 'h' claim, used to detect password changes and invalidate old tokens (server.js:415). The actual password verification uses bcrypt via passwordHash.verify (auth.js:22, password-hash.js:20-26). SHAKE256 never sees a plaintext password — the scanner is misled by the property name 'password'.",
+      "evidence": [
+        "server/auth.js:20-22",
+        "server/auth.js:30",
+        "server/password-hash.js:10-12",
+        "server/password-hash.js:20-26",
+        "server/model/user.js:41-48",
+        "server/server.js:411-416",
+        "server/util-server.js:658-669",
+        "server/server.js:1458-1465"
+      ],
+      "codeHash": "sha256:05cd029961bc43f4ef387ad5c3b898b8501d9c8b29b7de91396e4a7afe5b7cc6",
+      "model": "deepseek-v4-pro",
+      "decidedAt": "2026-07-23T09:18:31Z",
+      "tokensUsed": 226739
+    },
+    "synthetic:eaf07af5225fbbe6de3de162faeac793a8a3e95beb1fc30e18e51c0c36cc4571": {
+      "ruleId": "js/insufficient-password-hash",
+      "file": "server/modules/axios-ntlm/lib/hash.js",
+      "verdict": "benign",
+      "reason": "The flagged `createNTLMHash` function uses MD4 to compute the NT hash as required by the NTLM authentication protocol specification. This is not a password storage mechanism — it is a transient intermediate step in the NTLM challenge-response handshake. The hash is never persisted; it is used only to compute the NTLM response sent in an HTTP Authorization header. The application's actual password storage uses bcrypt with 10 salt rounds in server/password-hash.js. The MD4 usage here is protocol-mandated, not a password storage choice.",
+      "evidence": [
+        "server/modules/axios-ntlm/lib/hash.js:54-58",
+        "server/modules/axios-ntlm/lib/hash.js:56",
+        "server/modules/axios-ntlm/lib/ntlm.js:169",
+        "server/modules/axios-ntlm/lib/ntlm.js:187",
+        "server/modules/axios-ntlm/lib/ntlmClient.js:234-240",
+        "server/password-hash.js:10-12"
+      ],
+      "codeHash": "sha256:5fe2246c39625ac8b9ddc5587e289fd26a7eda8f9172510c9e500e8868406386",
+      "model": "deepseek-v4-pro",
+      "decidedAt": "2026-07-23T09:18:27Z",
+      "tokensUsed": 62052
+    },
+    "synthetic:f473ce05016d06d2552cde83e29b7ca878b8b606b5307ccfba6c200debd178a4": {
+      "ruleId": "js/disabling-certificate-validation",
+      "file": "server/notification-providers/teltonika.js",
+      "verdict": "benign",
+      "reason": "The rejectUnauthorized: false at line 51 is gated behind notification.teltonikaUnsafeTls (line 49), a user-configurable boolean set via an explicit checkbox in the Teltonika notification settings UI. The UI prominently displays a security warning (teltonikaUnsafeTlsDescription) explaining the man-in-the-middle risk. The code comment at lines 46-48 explains this is intentional for self-signed certificates on local Teltonika routers. The notification configuration is stored in the database and only modifiable by authenticated administrators; an external attacker cannot force this setting. This is an intentional, documented opt-in feature, not an exploitable vulnerability.",
+      "evidence": [
+        "server/notification-providers/teltonika.js:46-53",
+        "src/components/notifications/Teltonika.vue:22-26"
+      ],
+      "codeHash": "sha256:d466e2832a3d9fce985c55a86f8700c57d0b55e40d1b54f614bc64ba65e63c72",
+      "model": "deepseek-v4-pro",
+      "decidedAt": "2026-07-23T09:18:31Z",
+      "tokensUsed": 48685
+    }
+  }
+}
